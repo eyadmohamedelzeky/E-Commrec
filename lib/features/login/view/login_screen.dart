@@ -3,8 +3,10 @@ import 'package:ecommerce/core/commen_cubit/commen.dart';
 import 'package:ecommerce/core/widgets/custom_loading.dart';
 import 'package:ecommerce/core/widgets/custom_logo_buy.dart';
 import 'package:ecommerce/core/widgets/custom_text_form_field.dart';
-import 'package:ecommerce/screens/login/controller/login_controller.dart';
-import 'package:ecommerce/screens/sign_up/view/sign_up.dart';
+import 'package:ecommerce/features/forget_password/view/forget_password.dart';
+import 'package:ecommerce/features/home/view/home_screen.dart';
+import 'package:ecommerce/features/login/controller/login_controller.dart';
+import 'package:ecommerce/features/sign_up/view/sign_up.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -26,7 +28,17 @@ class _LoginScreenState extends State<LoginScreen> {
     return BlocProvider(
       create: (context) => LoginController(),
       child: BlocConsumer<LoginController, LoginState>(
-        listener: (context, state) {},
+        listener: (context, state) {
+          if (state is LoginSuccessState) {
+            Navigator.pushNamed(context, HomeScreen.id);
+          }
+          if (state is LoginErrorState) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Login Failed $state'),
+              backgroundColor: Colors.red,
+            ));
+          }
+        },
         builder: (context, state) {
           final loginController = BlocProvider.of<LoginController>(context);
           return Scaffold(
@@ -102,6 +114,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(
                     height: height * .05.h,
                   ),
+                  TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, ForgetPassword.id);
+                      },
+                      child: const Text('Forget Password ?')),
                   state is LoginLoadingState
                       ? const CustomLoading()
                       : Padding(
@@ -113,8 +130,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             textStyle: const TextStyle(fontSize: 20),
                             onPressed: () async {
                               if (formKey.currentState!.validate()) {
-                                await loginController.validateIsAdminOrUser(
-                                    loginController, context);
+                                if (loginController.isAdmin) {
+                                  await loginController.validateIsAdminOrUser(
+                                      loginController, context);
+                                } else {
+                                  loginController.signIn(context,
+                                      email: loginController
+                                          .loginEmailController.text,
+                                      password: loginController
+                                          .loginPasswordController.text);
+                                }
                               }
                             },
                             child: const Text(

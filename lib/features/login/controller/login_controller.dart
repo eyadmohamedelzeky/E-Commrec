@@ -1,7 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 import 'dart:developer';
-import 'package:ecommerce/screens/admin/view/admin_screen.dart';
-import 'package:ecommerce/screens/home/view/home_screen.dart';
+import 'package:ecommerce/features/admin/view/admin_screen.dart';
+import 'package:ecommerce/features/home/view/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -47,12 +47,14 @@ class LoginController extends Cubit<LoginState> {
       }
     }
   }
+
   bool isAdmin = false;
   void isAdminUser(bool admin) {
     isAdmin = admin;
     emit(ChangeAdminState());
   }
-   Future<void> validateIsAdminOrUser(
+
+  Future<void> validateIsAdminOrUser(
       LoginController loginController, BuildContext context) async {
     if (loginController.isAdmin) {
       if (loginController.loginPasswordController.text ==
@@ -82,6 +84,17 @@ class LoginController extends Cubit<LoginState> {
         loginController.showSnackBar(
             context: context, isSuccess: false, message: e.toString());
       }
+    }
+  }
+
+  Future<void> resetPassword(String email) async {
+    emit(ForgetPasswordLoading());
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      emit(ForgetPasswordScuess());
+    } on Exception catch (e) {
+      log('Error For RestPassword is $e');
+      emit(ForgetPasswordFailureState());
     }
   }
 }
